@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Production Sheet</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f2f5;
+  font-size: 13px;
+  padding-bottom: 80px;
+}
+
+/* TOP BAR */
+.topbar {
+  background: #1a3a6b;
+  color: white;
+  padding: 12px 14px 10px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar h1 { font-size: 15px; font-weight: bold; color: white; margin-bottom: 2px; }
+.topbar .sub { font-size: 11px; opacity: 0.8; }
+
+/* HEADER INPUTS */
+.header-card {
+  background: white;
+  border-bottom: 1px solid #ddd;
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.hfield label { font-size: 10px; color: #666; display: block; margin-bottom: 3px; font-weight: bold; text-transform: uppercase; }
+.hfield input {
+  width: 100%;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: #f9f9f9;
+  color: #222;
+}
+.hfield.full { grid-column: 1/-1; }
+
+/* BALE AUTO-FILL BAR */
+.bale-range {
+  background: #eaf0fb;
+  border-bottom: 1px solid #c5d4ee;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bale-range label { font-size: 11px; color: #1a3a6b; font-weight: bold; white-space: nowrap; }
+.bale-range input[type=number] {
+  width: 68px;
+  font-size: 13px;
+  border: 1px solid #aac;
+  border-radius: 6px;
+  padding: 5px 7px;
+  background: white;
+  color: #222;
+  text-align: center;
+}
+.bale-range button {
+  font-size: 12px;
+  padding: 6px 14px;
+  background: #1a3a6b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* COLUMN TABS */
+.col-tabs { display: flex; background: #1a3a6b; }
+.col-tab {
+  flex: 1;
+  padding: 9px 4px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  text-align: center;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  font-weight: bold;
+}
+.col-tab.active { color: white; border-bottom-color: #FFD700; }
+
+/* COLUMN HEADER ROW */
+.col-header {
+  display: grid;
+  grid-template-columns: 34px 1fr 1fr 1fr 30px;
+  gap: 3px;
+  padding: 5px 14px;
+  background: #e8ecf5;
+  border-bottom: 1px solid #ccc;
+}
+.col-header span { font-size: 9px; font-weight: bold; color: #555; text-align: center; text-transform: uppercase; }
+
+/* DATA ROW */
+.row {
+  display: grid;
+  grid-template-columns: 34px 1fr 1fr 1fr 30px;
+  gap: 3px;
+  padding: 4px 14px;
+  border-bottom: 1px solid #eee;
+  align-items: center;
+  background: white;
+}
+.row:nth-child(even) { background: #f7f9fc; }
+.row .sno { font-size: 11px; color: #888; text-align: center; font-weight: bold; }
+.row input {
+  width: 100%;
+  font-size: 13px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px 4px;
+  background: white;
+  color: #222;
+  text-align: center;
+}
+.row input:focus { outline: none; border-color: #1a3a6b; background: #eaf0fb; }
+.row .del { background: none; border: none; color: #bbb; font-size: 18px; cursor: pointer; padding: 0; text-align: center; line-height: 1; }
+.row .del:active { color: #e44; }
+
+/* TOTALS */
+.totals-bar {
+  background: #e8ecf5;
+  border-top: 2px solid #c5d4ee;
+  padding: 8px 14px;
+  display: flex;
+  justify-content: space-around;
+}
+.totals-bar .titem { text-align: center; }
+.totals-bar .titem .lbl { font-size: 9px; color: #555; text-transform: uppercase; font-weight: bold; }
+.totals-bar .titem .val { font-size: 15px; font-weight: bold; color: #1a3a6b; }
+
+.grand-bar {
+  background: #1a3a6b;
+  color: white;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.grand-bar .lbl { font-size: 12px; opacity: 0.85; font-weight: bold; }
+.grand-bar .val { font-size: 20px; font-weight: bold; }
+
+/* FLOATING BUTTONS */
+.fab-row {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 200;
+}
+.fab { padding: 11px 20px; border-radius: 22px; border: none; font-size: 13px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.fab-add { background: #1a3a6b; color: white; }
+.fab-print { background: white; color: #1a3a6b; border: 1.5px solid #1a3a6b; }
+
+/* ========================
+   PRINT STYLES
+   ======================== */
+.print-table-wrapper { display: none; }
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+
+  body { background: white; padding-bottom: 0; font-family: Arial, sans-serif; }
+
+  /* Hide all screen elements */
+  .topbar, .header-card, .bale-range,
+  .col-tabs, .col-header, .mobile-view, .fab-row {
+    display: none !important;
+  }
+
+  /* Show print table */
+  .print-table-wrapper { display: block !important; }
+
+  /* Table fills page */
+  table.ptable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5px;
+    table-layout: fixed;
+    page-break-inside: auto;
+  }
+
+  /* thead = repeats on EVERY printed page */
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  tbody { display: table-row-group; }
+
+  /* Title row in thead */
+  table.ptable thead tr.hdr-title th {
+    background: #1a3a6b !important;
+    color: white !important;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 6px 4px;
+    text-align: center;
+    letter-spacing: 0.5px;
+    border: 1px solid #1a3a6b;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Meta row: BR# | Extra | Date */
+  table.ptable thead tr.hdr-meta th {
+    background: #dce4f5 !important;
+    color: #111 !important;
+    font-size: 9.5px;
+    font-weight: bold;
+    padding: 4px 6px;
+    border: 1px solid #888;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  table.ptable thead tr.hdr-meta th.al { text-align: left; }
+  table.ptable thead tr.hdr-meta th.ac { text-align: center; }
+  table.ptable thead tr.hdr-meta th.ar { text-align: right; }
+
+  /* Column label row */
+  table.ptable thead tr.hdr-cols th {
+    background: #b8c8e8 !important;
+    color: #111 !important;
+    font-size: 8.5px;
+    font-weight: bold;
+    padding: 4px 2px;
+    text-align: center;
+    text-transform: uppercase;
+    border: 1px solid #555;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Data cells */
+  table.ptable td {
+    border: 1px solid #555;
+    padding: 3px 3px;
+    text-align: center;
+    font-size: 9px;
+  }
+
+  table.ptable tbody tr:nth-child(even) td {
+    background: #f3f6fb !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Total row */
+  table.ptable tfoot tr.total-row td {
+    font-weight: bold;
+    background: #c8d4ee !important;
+    border: 1px solid #555;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Grand total row */
+  table.ptable tfoot tr.grand-row td {
+    font-weight: bold;
+    font-size: 11px;
+    background: #1a3a6b !important;
+    color: white !important;
+    border: 1px solid #1a3a6b;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  tr { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR (screen only) -->
+<div class="topbar">
+  <h1 id="ptitle">Production Sheet - NAVY / BLUE CHECK</h1>
+  <div class="sub" id="psub">BR#542 / 9026393001 | 9092369306 | 41 NAVY/BLUE CHECK</div>
+</div>
+
+<!-- HEADER FIELDS (screen only) -->
+<div class="header-card">
+  <div class="hfield full">
+    <label>Title</label>
+    <input id="h_title" value="Production Sheet - NAVY / BLUE CHECK" oninput="syncHeader()">
+  </div>
+  <div class="hfield">
+    <label>BR#</label>
+    <input id="h_br" value="BR#542 / 9026393001" oninput="syncHeader()">
+  </div>
+  <div class="hfield">
+    <label>Extra Info</label>
+    <input id="h_extra" value="9092369306 | 41 NAVY/BLUE CHECK" oninput="syncHeader()">
+  </div>
+  <div class="hfield">
+    <label>Date</label>
+    <input type="date" id="h_date" oninput="syncHeader()">
+  </div>
+</div>
+
+<!-- BALE AUTO-FILL (screen only) -->
+<div class="bale-range">
+  <label>Bale No:</label>
+  <input type="number" id="bale_start" value="245" min="1">
+  <label>to</label>
+  <input type="number" id="bale_end" value="350" min="1">
+  <button onclick="autoFillBales()">&#9654; Auto Fill</button>
+</div>
+
+<!-- COLUMN TABS (screen only) -->
+<div class="col-tabs mobile-view">
+  <div class="col-tab active" onclick="switchCol(0)">Column 1</div>
+  <div class="col-tab" onclick="switchCol(1)">Column 2</div>
+  <div class="col-tab" onclick="switchCol(2)">Column 3</div>
+</div>
+
+<!-- COLUMN HEADER (screen only) -->
+<div class="col-header mobile-view">
+  <span>S.No</span><span>Bale No</span><span>Roll No</span><span>Mtrs</span><span></span>
+</div>
+
+<!-- ROWS (screen only) -->
+<div id="rowsContainer" class="mobile-view"></div>
+
+<!-- TOTALS (screen only) -->
+<div class="totals-bar mobile-view">
+  <div class="titem"><div class="lbl">Col 1</div><div class="val" id="t1">0.00</div></div>
+  <div class="titem"><div class="lbl">Col 2</div><div class="val" id="t2">0.00</div></div>
+  <div class="titem"><div class="lbl">Col 3</div><div class="val" id="t3">0.00</div></div>
+</div>
+<div class="grand-bar mobile-view">
+  <span class="lbl">Grand Total</span>
+  <span class="val" id="grand">0.00</span>
+</div>
+
+<!-- ====================================================
+     PRINT TABLE
+     thead (Title + BR# + Date + Column labels)
+     repeats automatically on EVERY printed page.
+     ==================================================== -->
+<div class="print-table-wrapper" id="printTableWrapper">
+  <table class="ptable" id="printTable">
+
+    <thead>
+      <!-- Title — repeats on every page -->
+      <tr class="hdr-title">
+        <th colspan="12" id="pt_title">Production Sheet</th>
+      </tr>
+      <!-- BR# | Extra Info | Date — repeats on every page -->
+      <tr class="hdr-meta">
+        <th colspan="4" class="al" id="pt_br">BR#</th>
+        <th colspan="4" class="ac" id="pt_extra">Extra Info</th>
+        <th colspan="4" class="ar" id="pt_date">Date</th>
+      </tr>
+      <!-- Column labels — repeats on every page -->
+      <tr class="hdr-cols">
+        <th>S.NO</th><th>BALE NO</th><th>ROLL NO</th><th>MTRS</th>
+        <th>S.NO</th><th>BALE NO</th><th>ROLL NO</th><th>MTRS</th>
+        <th>S.NO</th><th>BALE NO</th><th>ROLL NO</th><th>MTRS</th>
+      </tr>
+    </thead>
+
+    <tbody id="printBody"></tbody>
+
+    <tfoot>
+      <tr class="total-row">
+        <td colspan="3">TOTAL</td><td id="pt1">0.00</td>
+        <td colspan="3">TOTAL</td><td id="pt2">0.00</td>
+        <td colspan="3">TOTAL</td><td id="pt3">0.00</td>
+      </tr>
+      <tr class="grand-row">
+        <td colspan="11">GRAND TOTAL</td><td id="pgrand">0.00</td>
+      </tr>
+    </tfoot>
+
+  </table>
+</div>
+
+<!-- FLOATING BUTTONS -->
+<div class="fab-row">
+  <button class="fab fab-add" onclick="addRow()">+ Add Row</button>
+  <button class="fab fab-print" onclick="doPrint()">&#128438; Print</button>
+</div>
+
+<script>
+var rows = [];
+var activeCol = 0;
+
+function switchCol(i) {
+  activeCol = i;
+  document.querySelectorAll('.col-tab').forEach(function(t, idx) {
+    t.classList.toggle('active', idx === i);
+  });
+  renderRows();
+}
+
+function syncHeader() {
+  var title = document.getElementById('h_title').value;
+  var br = document.getElementById('h_br').value;
+  var ex = document.getElementById('h_extra').value;
+  var d = document.getElementById('h_date').value;
+  var dateStr = d ? ' | ' + new Date(d).toLocaleDateString('en-GB') : '';
+  document.getElementById('ptitle').textContent = title;
+  document.getElementById('psub').textContent = br + ' | ' + ex + dateStr;
+}
+
+function addRow() {
+  rows.push({ bale: ['','',''], roll: ['','',''], mtrs: ['','',''] });
+  renderRows();
+  calcAll();
+}
+
+function delRow(i) {
+  rows.splice(i, 1);
+  renderRows();
+  calcAll();
+}
+
+function renderRows() {
+  var c = activeCol;
+  var container = document.getElementById('rowsContainer');
+  container.innerHTML = '';
+  rows.forEach(function(r, i) {
+    var div = document.createElement('div');
+    div.className = 'row';
+    div.innerHTML =
+      '<span class="sno">' + (i+1) + '</span>' +
+      '<input value="' + (r.bale[c]||'') + '" inputmode="numeric" placeholder="Bale" oninput="rows['+i+'].bale['+c+']=this.value;calcAll();">' +
+      '<input value="' + (r.roll[c]||'') + '" inputmode="numeric" placeholder="Roll" oninput="rows['+i+'].roll['+c+']=this.value;calcAll();">' +
+      '<input value="' + (r.mtrs[c]||'') + '" inputmode="decimal" placeholder="0.00" oninput="rows['+i+'].mtrs['+c+']=this.value;calcAll();">' +
+      '<button class="del" onclick="delRow('+i+')">&#215;</button>';
+    container.appendChild(div);
+  });
+}
+
+function calcAll() {
+  var totals = [0, 0, 0];
+  rows.forEach(function(r) {
+    for (var c = 0; c < 3; c++) totals[c] += parseFloat(r.mtrs[c] || 0);
+  });
+  document.getElementById('t1').textContent = totals[0].toFixed(2);
+  document.getElementById('t2').textContent = totals[1].toFixed(2);
+  document.getElementById('t3').textContent = totals[2].toFixed(2);
+  document.getElementById('grand').textContent = (totals[0]+totals[1]+totals[2]).toFixed(2);
+}
+
+function autoFillBales() {
+  var start = parseInt(document.getElementById('bale_start').value) || 245;
+  var end = parseInt(document.getElementById('bale_end').value) || 350;
+  if (start > end) { alert('Start must be less than or equal to end'); return; }
+
+  var totalBales = end - start + 1;
+  var perCol = Math.ceil(totalBales / 3);
+
+  while (rows.length < perCol) {
+    rows.push({ bale: ['','',''], roll: ['','',''], mtrs: ['','',''] });
+  }
+
+  var baleNum = start;
+  for (var col = 0; col < 3; col++) {
+    for (var row = 0; row < perCol; row++) {
+      if (baleNum > end) break;
+      if (row < rows.length) {
+        rows[row].bale[col] = baleNum;
+      } else {
+        var nr = { bale:['','',''], roll:['','',''], mtrs:['','',''] };
+        nr.bale[col] = baleNum;
+        rows.push(nr);
+      }
+      baleNum++;
+    }
+  }
+  renderRows();
+  calcAll();
+}
+
+function buildPrintTable() {
+  var title = document.getElementById('h_title').value;
+  var br = document.getElementById('h_br').value;
+  var ex = document.getElementById('h_extra').value;
+  var d = document.getElementById('h_date').value;
+  var dateStr = d ? 'DATE: ' + new Date(d).toLocaleDateString('en-GB') : '';
+
+  document.getElementById('pt_title').textContent = title;
+  document.getElementById('pt_br').textContent = br;
+  document.getElementById('pt_extra').textContent = ex;
+  document.getElementById('pt_date').textContent = dateStr;
+
+  var tbody = document.getElementById('printBody');
+  tbody.innerHTML = '';
+  var totals = [0, 0, 0];
+
+  rows.forEach(function(r, i) {
+    var tr = document.createElement('tr');
+    for (var c = 0; c < 3; c++) {
+      var sno = document.createElement('td'); sno.textContent = i + 1;
+      var bale = document.createElement('td'); bale.textContent = r.bale[c] || '';
+      var roll = document.createElement('td'); roll.textContent = r.roll[c] || '';
+      var mtrs = document.createElement('td');
+      var mv = parseFloat(r.mtrs[c] || 0);
+      mtrs.textContent = mv ? mv.toFixed(2) : '';
+      totals[c] += mv;
+      tr.appendChild(sno);
+      tr.appendChild(bale);
+      tr.appendChild(roll);
+      tr.appendChild(mtrs);
+    }
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('pt1').textContent = totals[0].toFixed(2);
+  document.getElementById('pt2').textContent = totals[1].toFixed(2);
+  document.getElementById('pt3').textContent = totals[2].toFixed(2);
+  document.getElementById('pgrand').textContent = (totals[0]+totals[1]+totals[2]).toFixed(2);
+}
+
+function doPrint() {
+  buildPrintTable();
+  window.print();
+}
+
+// INIT
+for (var i = 0; i < 10; i++) addRow();
+</script>
+
+</body>
+</html>
